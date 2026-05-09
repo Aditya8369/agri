@@ -18,8 +18,6 @@ import {
 } from "./weatherService";
 import { useWeatherManagement } from "../hooks/useWeatherManagement";
 
-const SENT_NOTIFICATION_KEY = "agriWeatherNotificationSignature";
-
 function formatSeverity(severity) {
   return severity.charAt(0).toUpperCase() + severity.slice(1);
 }
@@ -58,33 +56,6 @@ export default function WeatherCard({
     handleUseMyLocation();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (!snapshot?.alerts?.length || notificationPermission !== "granted") {
-      return;
-    }
-
-    const topAlert = snapshot.alerts[0];
-    if (topAlert.severity === "info") {
-      return;
-    }
-
-    const signature = `${snapshot.location?.name}-${topAlert.type}-${topAlert.severity}`;
-    const lastSent = localStorage.getItem(SENT_NOTIFICATION_KEY);
-
-    if (lastSent === signature) {
-      return;
-    }
-
-    const warning = cropWarnings[0]?.message || topAlert.message;
-    const notification = new Notification(topAlert.title, {
-      body: `${snapshot.location?.city || "Your area"}: ${warning}`,
-      tag: signature,
-    });
-
-    notification.onclick = () => window.focus();
-    localStorage.setItem(SENT_NOTIFICATION_KEY, signature);
-  }, [snapshot, cropWarnings, notificationPermission]);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {

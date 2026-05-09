@@ -3,7 +3,7 @@
  * Fetches data from data.gov.in (Agmarknet)
  */
 
-const API_KEY = "579b464db66ec23bdd000001cdd39465d03e4d774860900bb102e473"; // Generic public key for demo
+const API_KEY = import.meta.env.VITE_MARKET_API_KEY || "";
 const RESOURCE_ID = "9ef27db9-c68f-406d-99fd-3c373b06019a";
 const BASE_URL = "https://api.data.gov.in/resource";
 
@@ -24,6 +24,10 @@ const MOCK_FALLBACK = [
 
 export const fetchMarketPrices = async (filters = {}) => {
   try {
+    if (!API_KEY) {
+      throw new Error("Market API key is not configured.");
+    }
+
     const url = `${BASE_URL}/${RESOURCE_ID}?api-key=${API_KEY}&format=json&limit=100`;
     const response = await fetch(url);
     const data = await response.json();

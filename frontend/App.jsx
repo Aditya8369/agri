@@ -31,6 +31,7 @@ import Home from "./Home";
 import MarketPrices from "./MarketPrices";
 import ProfileSetup from "./ProfileSetup";
 import Resources from "./Resources";
+import WeatherAlertBar from "./weather/WeatherAlertBar";
 
 import "./App.css";
 import "./themes/sunlight.css";
@@ -79,6 +80,7 @@ function App() {
   return (
     <div className={`app ${isDarkTheme ? "theme-dark" : ""}`}>
       <Toaster position="top-right" />
+      <WeatherAlertBar />
 
       <nav className="navbar">
         <div className="nav-left">

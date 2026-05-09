@@ -127,7 +127,29 @@
   margin-left: 8px;
 }
 
+.weather-alert-bar__action {
+  flex-shrink: 0;
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid rgba(15, 59, 36, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--weather-alert-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+}
+
 .weather-alert-bar__dismiss:hover {
+  background: #ffffff;
+}
+
+.weather-alert-bar__action:hover {
   background: #ffffff;
 }
 
@@ -188,6 +210,7 @@
 }
 
 .sunlight .weather-alert-bar__chip,
+.sunlight .weather-alert-bar__action,
 .sunlight .weather-alert-bar__dismiss,
 .sunlight .weather-alert-bar__action {
   border: 2px solid #000000;

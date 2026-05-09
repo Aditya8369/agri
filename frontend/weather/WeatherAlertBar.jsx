@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FaBell,
   FaMapMarkerAlt,
@@ -9,19 +9,29 @@ import {
   fetchWeatherByIP,
   fetchWeatherByLocation,
   getCurrentPosition,
+  getCropWarnings,
   getStoredWeatherSnapshot,
   notifyWeatherSnapshotUpdated,
 } from "./weatherService";
 import "./WeatherAlertBar.css";
+import { useWeatherStore } from "../stores/weatherStore";
 
 const REFRESH_INTERVAL_MS = 15 * 60 * 1000;
 const LEGACY_DISMISS_KEY = "agriLiveAlertDismissed";
+const SENT_NOTIFICATION_KEY = "agriWeatherNotificationSignature";
 
 export default function WeatherAlertBar() {
   const [snapshot, setSnapshot] = useState(() => getStoredWeatherSnapshot());
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const { selectedCrop, notificationPermission, setNotificationPermission } = useWeatherStore();
+
+  const cropWarnings = useMemo(
+    () => getCropWarnings(snapshot?.alerts || [], selectedCrop),
+    [snapshot, selectedCrop]
+  );
+
   const applySnapshot = useCallback((latestSnapshot, shouldBroadcast = true) => {
     setSnapshot(latestSnapshot);
     setError("");
@@ -53,6 +63,33 @@ export default function WeatherAlertBar() {
 
     const handleExternalSnapshot = (event) => {
       const latestSnapshot = event.detail;
+
+  useEffect(() => {
+    if (!snapshot?.alerts?.length || notificationPermission !== "granted" || typeof Notification === "undefined") {
+      return;
+    }
+
+    const topAlert = snapshot.alerts[0];
+    if (topAlert.severity === "info") {
+      return;
+    }
+
+    const signature = `${snapshot.location?.name}-${selectedCrop}-${topAlert.type}-${topAlert.severity}`;
+    const lastSent = localStorage.getItem(SENT_NOTIFICATION_KEY);
+
+    if (lastSent === signature) {
+      return;
+    }
+
+    const warning = cropWarnings[0]?.message || topAlert.message;
+    const notification = new Notification(topAlert.title, {
+      body: `${snapshot.location?.city || "Your area"}: ${warning}`,
+      tag: signature,
+    });
+
+    notification.onclick = () => window.focus();
+    localStorage.setItem(SENT_NOTIFICATION_KEY, signature);
+  }, [cropWarnings, notificationPermission, selectedCrop, snapshot]);
       if (!latestSnapshot?.location) {
         return;
       }
@@ -222,6 +259,30 @@ export default function WeatherAlertBar() {
     setDismissed(true);
   };
 
+  const enableWeatherNotifications = async () => {
+    if (typeof Notification === "undefined") {
+      setNotificationPermission("unsupported");
+      return;
+    }
+
+    if (Notification.permission === "granted") {
+      setNotificationPermission("granted");
+      return;
+    }
+
+    if (Notification.permission === "denied") {
+      setNotificationPermission("denied");
+      return;
+    }
+
+    try {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+    } catch {
+      setNotificationPermission(Notification.permission || "default");
+    }
+  };
+
   if (dismissed) {
     return null;
   }
@@ -260,6 +321,17 @@ export default function WeatherAlertBar() {
             <span className="weather-alert-bar__temp-summary">{weatherSummary}</span>
           </div>
         )}
+
+        <button className="weather-alert-bar__action" onClick={enableWeatherNotifications}>
+          <FaBell />
+          <span>
+            {notificationPermission === "granted"
+              ? "Alerts On"
+              : notificationPermission === "unsupported"
+              ? "Alerts Unavailable"
+              : "Enable Alerts"}
+          </span>
+        </button>
 
         <button className="weather-alert-bar__dismiss" onClick={dismissBar} aria-label="Dismiss alerts">
           <FaTimes />
