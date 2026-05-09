@@ -15,6 +15,7 @@ function SoilChatbot({ onClose }) {
     isSpeaking,
     stopSpeaking,
     isLoading,
+    isChatbotAvailable,
     handleSendMessage,
   } = useChatbot();
 
@@ -48,6 +49,29 @@ function SoilChatbot({ onClose }) {
     "🧪 How to improve my soil health?",
     "🐛 Pest control for my crops"
   ];
+
+  if (!isChatbotAvailable) {
+    return (
+      <div className="soil-chatbot">
+        <div className="chat-header">
+          <div className="header-info">
+            <h2>🌱 Agri Assistant <FaVolumeUp style={{ fontSize: '0.9rem', marginLeft: '8px', opacity: 0.8 }} /></h2>
+            <span className="status">AI Agricultural Expert</span>
+          </div>
+          <button className="close-btn" onClick={onClose}>✖</button>
+        </div>
+
+        <div className="chat-window" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', textAlign: 'center' }}>
+          <div>
+            <h3 style={{ marginBottom: '0.75rem' }}>Assistant temporarily unavailable</h3>
+            <p style={{ margin: 0, maxWidth: '28rem', lineHeight: 1.5 }}>
+              AI chat is not available right now. You can still use the rest of the app for crop guidance, weather, and farming tools.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="soil-chatbot">

@@ -5,6 +5,8 @@ import apiClient from '../services/api';
 
 export const useChatbot = () => {
   const { handleWarning } = useErrorHandler();
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  const isChatbotAvailable = Boolean(apiKey);
   const {
     messages,
     addMessage,
@@ -116,6 +118,10 @@ export const useChatbot = () => {
     async (text, imageFile) => {
       if (!text.trim() && !imageFile) return;
 
+      if (!isChatbotAvailable) {
+        return;
+      }
+
       // Add user message
       addMessage({ text: text || '(Image uploaded)', from: 'user' });
       setUserInput('');
@@ -138,24 +144,13 @@ export const useChatbot = () => {
           });
         }
 
-        const API_KEY = import.meta.env.VITE_API_KEY;
-
-        if (!API_KEY) {
-          setIsLoading(false);
-          addMessage({
-            text: '⚠️ API Key is missing. Please add your Gemini API key to enable the AI features.',
-            from: 'bot',
-          });
-          return;
-        }
-
         const response = await apiClient.post(
           'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent',
           {
             contents: [{ parts }],
           },
           {
-            params: { key: API_KEY },
+            params: { key: apiKey },
             retries: 1,
             errorContext: 'chatbot-message',
             errorMessage: 'Failed to process your message. Please try again.',
@@ -202,6 +197,7 @@ export const useChatbot = () => {
     speak,
     stopSpeaking,
     isLoading,
+    isChatbotAvailable,
     handleSendMessage,
     resetChatbotStore,
   };
